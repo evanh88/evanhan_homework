@@ -1,5 +1,5 @@
 
-**Task 1.1**  
+### Task 1.1
 
 
 1. 🔍*Use Brave Search to: Task: Search for “latest AI paper publication platforms” and list the top 3 search results with titles and URLs. Prompt in Claude: "Use Brave Search to look up the latest AI paper publication platforms and return the top 3 results with title and link."*   

@@ -3,7 +3,7 @@
 
 1. 🔍*Use Brave Search to: Task: Search for “latest AI paper publication platforms” and list the top 3 search results with titles and URLs. Prompt in Claude: "Use Brave Search to look up the latest AI paper publication platforms and return the top 3 results with title and link."*
 
-![](screenshots/<Screenshot 2025-07-23 164559>)
+![](screenshots/<Screenshot 2025-07-23 164559.png>)
 ![[Screenshot-2025-07-23-164559.png]]
 
 2. 💼*Use GitHub to: Task: Access one of your public repositories (e.g., my-cool-project) and list the 5 most recent commits. Prompt in Claude: "Connect to my GitHub account using the MCP plugin and list the 5 latest commits from the repository my-cool-project."*

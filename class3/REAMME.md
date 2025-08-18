@@ -7,3 +7,11 @@ This project implementa a voice asistance using STT+LLM+SST techniques in Stream
 *）Run "! streamlit run app.py" to start the Streamlit app.
 <br>
 *) The app can be viewed at http://localhost:8501. If code is run remotely on a cloud GPU server, port forwarding needs to be set for port# 8501 in VS Code (in Ports tab in View Panel）
+
+Further Enhancement Ideas：
+<br>
+Use async processing for parallel ASR/LLM/TTS.
+<br>
+Integrate a microphone frontend UI for live recording.
+<br>
+Add speaker identification or personalized voice response.

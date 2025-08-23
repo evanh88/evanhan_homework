@@ -1,0 +1,113 @@
+Example queries and the top 3 retrieved passages for each query
+
+Query 1: "RepreGuard and three other detectors"
+
+Retrieved results:
+
+[
+  {
+    "filename": "2508.15370v1.pdf",
+    "page": 13,
+    "content": "V. Initially, the\nRESA-7B model trained solely on the safety data in VLGuard\n"
+  },
+  {
+    "filename": "2508.15252v1.pdf",
+    "page": 8,
+    "content": "s normal and another is\nabnormal. Based on the previous detector [21], fguardianΦ(·) can\nbe built through a TextCNN, an Encoder and a MLP, where the\nTextCNN enhanced by the Encoder are used to capture features\nfrom the profiles, and the MLP followed by a Sigmoid is\nTABLE II: Statistics of Datasets\nDataset\n#Users\n#Items\n#Reviews\nSparsity\nAmazon Musical Instruments\n1,429\n900\n10,261\n99.20%\nAmazon Automotive\n2,928\n1,835\n20,473\n99.62%\nYelp\n1,599\n1,318\n30,120\n98.57%\nleveraged to perform detections bas"
+  },
+  {
+    "filename": "2508.15370v1.pdf",
+    "page": 11,
+    "content": "erence\n100.0\n4.17\nPrivacy Leakage in Vision\n82.82\n14.11\nAs shown in Table IX, VLGuard consistently outperforms\nthe SPA-VL on the safety-critical tasks, especially on refusal-\noriented tasks such as jailbreaking (Task S.4-6), achieving\nnear-perfect scores. This outcome is attributed to the high\nproportion of refusal-type data in VLGuard. However, the\nmodel trained on VLGuard also exhibits over-refusal behavior,\nfrequently starting responses with phrases like “I’m sorry,”\neven in low-risk scenario"
+  }
+]
+
+Query 2: "VLGuard three other detectors"
+
+Retrieved results:
+
+[
+  {
+    "filename": "2508.15370v1.pdf",
+    "page": 13,
+    "content": "V. Initially, the\nRESA-7B model trained solely on the safety data in VLGuard\n"
+  },
+  {
+    "filename": "2508.15370v1.pdf",
+    "page": 11,
+    "content": "f LLaVA-1.5. The training process adopts the\nhyperparameters from the VLGuard setup: 3 epochs, a global\nbatch size of 128, and a learning rate of 1e-5.\nTABLE IX: Performance with different data contents.\nTask\nVLGuard\nSPA-VL-SFT\nRisk Identification\n67.26\n76.75\nToxic Content Generation\n82.68\n75.39\nTypographic Jailbreaking\n99.50\n91.00\nMultimodal Jailbreaking\n99.63\n57.50\nTextual Jailbreaking\n93.75\n91.25\nAgreement on Steretypes\n91.27\n76.59\nVisual Preference\n100.0\n4.17\nPrivacy Leakage in Vision\n82.82\n"
+  },
+  {
+    "filename": "2508.15370v1.pdf",
+    "page": 11,
+    "content": "erence\n100.0\n4.17\nPrivacy Leakage in Vision\n82.82\n14.11\nAs shown in Table IX, VLGuard consistently outperforms\nthe SPA-VL on the safety-critical tasks, especially on refusal-\noriented tasks such as jailbreaking (Task S.4-6), achieving\nnear-perfect scores. This outcome is attributed to the high\nproportion of refusal-type data in VLGuard. However, the\nmodel trained on VLGuard also exhibits over-refusal behavior,\nfrequently starting responses with phrases like “I’m sorry,”\neven in low-risk scenario"
+  }
+]
+
+Query 3: "LLM evaluations to Southeast Asian languages"
+
+Retrieved results:
+
+[
+  {
+    "filename": "2508.15239v1.pdf",
+    "page": 1,
+    "content": "nd cultural\ngrounding are required.\nRecent efforts have extended LLM evaluations to\nSoutheast Asian languages—including Indonesian,\nVietnamese, and Thai—through benchmarks like\nSEA-Bench (Liu et al., 2025), SEA-HELM (Su-\nsanto et al., 2025), and SEA-Crowd (Lovenia et al.,\n2024). However, these benchmarks predominantly\nrely on translated English data and lack domain\nspecificity. This gap risk inflated performance es-\ntimates that do not reflect actual usage in native,\ndomain-sensitive contexts. I"
+  },
+  {
+    "filename": "2508.15239v1.pdf",
+    "page": 10,
+    "content": "s 2819–2834, Torino, Italia.\nELRA and ICCL.\nChaoqun Liu, Wenxuan Zhang, Jiahao Ying, Mahani\nAljunied, Anh Tuan Luu, and Lidong Bing. 2025.\nSeaexam and seabench: Benchmarking llms with lo-\ncal multilingual questions in southeast asia. Preprint,\narXiv:2502.06298.\nHoly Lovenia, Rahmad Mahendra, Salsabil Maulana\nAkbar, Lester James Validad Miranda, Jennifer\nSantoso, Elyanah Aco, Akhdan Fadhilah, Jonibek\nMansurov, Joseph Marvin Imperial, Onno P. Kamp-\nman, Joel Ruben Antony Moniz, Muhammad\nRavi Shult"
+  },
+  {
+    "filename": "2508.15239v1.pdf",
+    "page": 9,
+    "content": "taset, evaluation splits, train-\ning scripts, and all fine-tuned models, even those\nthat achieve state-of-the-art performance on Thai\nLLM benchmarks — to establish solid baselines,\nensure reproducibility, and support future research\nfocused on culturally and professionally relevant\nThai applications.\nAcknowledgement\nThis research is supported by the National Research\nFoundation, Singapore, under its National Large\nLanguage Models Funding Initiative. Any opin-\nions, findings, and conclusions or r"
+  }
+]
+
+Query 4: "LLMs for Thai"
+
+Retrieved results:
+
+
+[
+  {
+    "filename": "2508.15239v1.pdf",
+    "page": 1,
+    "content": ".\nMoreover, developing LLMs for Thai remains\nchallenging due to the lack of high-quality super-\nvised datasets. Although recent advances such as\nLlama (Grattafiori et al., 2024), Gemma (Team\net al., 2024), SEA-LION (Ng et al., 2025), and\nQwen (Qwen et al., 2025) have demonstrated\npromising support for Thai, their understanding\nof culturally and professionally grounded instruc-\ntions remains underexplored. As shown in Figure 1,\nstate-of-the-art models like ChatGPT-4o struggle\nto respond accuratel"
+  },
+  {
+    "filename": "2508.15239v1.pdf",
+    "page": 2,
+    "content": " Thai instruction-following dataset\nfor evaluating and improving LLM performance\non Thai instructions. WangchanThaiInstruct com-\nprises 28,098 training and 6,916 test samples across\nfour domains (Medical, Law, Finance, and Re-\ntail) and seven task types (Brainstorming, Clas-\nsification, Closed QA, Creative writing, Multiple\nchoice, Open QA, and Summarization). All sam-\nples are human-authored, with no reliance on LLM-\ngenerated content. We also introduce an evaluation\nprotocol aligned with human"
+  },
+  {
+    "filename": "2508.15239v1.pdf",
+    "page": 3,
+    "content": "thai\n3\n"
+  }
+]
+
+
+Query = "universal phoneme recognition"
+
+Retrieved results:
+
+[
+  {
+    "filename": "2508.15316v1.pdf",
+    "page": 7,
+    "content": "hen we applied broad phoneme group\nmapping to reduce the set to just 15 phonemes, the\nPER on MSWC-eval dropped from 0.45 to 0.40.\n4\nConclusion\nThrough this work, we have demonstrated that\neffective universal phoneme recognition can be\nachieved using brief 120ms windows of speech\ninput. Our CUPE model achieves competitive per-\nformance while requiring an order of magnitude\nfewer parameters than current approaches. The\nmodel’s success in cross-lingual generalization val-\nidates our core finding th"
+  },
+  {
+    "filename": "2508.15316v1.pdf",
+    "page": 1,
+    "content": "CUPE: Contextless Universal Phoneme Encoder for Language-Agnostic\nSpeech Processing ∗\nAbdul Rehman\nJian-Jun Zhang\nBournemouth University\nBournemouth, United Kingdom\narehman, jjunzhang, xyang@bournemouth.ac.uk\nXiaosong Yang\nAbstract\nUniversal phoneme recognition typically re-\nquires analyzing long speech segments and\nlanguage-specific patterns.\nMany speech\nprocessing tasks require pure phoneme rep-\nresentations free from contextual influence,\nwhich motivated our development of CUPE\n- a lightweigh"
+  },
+  {
+    "filename": "2508.15316v1.pdf",
+    "page": 7,
+    "content": "entally different phoneme inventory\napproaches.\nWhile CUPE demonstrates strong performance\nin contextless phoneme recognition, several limi-\ntations warrant discussion. The model’s varying\nperformance across language families suggests po-\ntential biases in the feature extraction process that\nmerit further investigation. Some languages with\ndistinct phonological structures or phoneme inven-\ntories may require specialized preprocessing or ar-\nchitectural adaptations to achieve optimal perfor-\nmanc"
+  }
+]

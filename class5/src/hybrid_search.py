@@ -5,13 +5,9 @@ from langchain_core.documents import Document
 from pydantic import BaseModel
 import json
 import uvicorn
-from rank_bm25 import BM25Okapi
 import os
-import numpy as np
 import sqlite3
 from contextlib import asynccontextmanager
-from starlette.responses import JSONResponse
-from typing import List
 import math
 
 embedding_model = SentenceTransformer('all-MiniLM-L6-v2') 

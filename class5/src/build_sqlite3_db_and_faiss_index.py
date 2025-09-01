@@ -9,7 +9,6 @@ import faiss
 import sqlite3
 import numpy as np
 import os
-from pathlib import Path
 import json
 import re
 from typing import List
@@ -82,7 +81,6 @@ DATABSE_FILE = "sqlite3_database_doc_trunks.db"
 FAISS_INDEX_FILE = "faiss_index.index"
 
 def build():
-
     documents = []
 
     if os.path.exists(DATABSE_FILE):

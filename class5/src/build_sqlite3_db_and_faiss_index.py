@@ -9,6 +9,7 @@ import faiss
 import sqlite3
 import numpy as np
 import os
+from pathlib import Path
 import json
 import re
 from typing import List
@@ -95,12 +96,8 @@ def build():
              (chunk, content='documents', content_rowid='doc_id')''')
     conn.commit()
 
-    # Use pathLib to get path of PDF files
-    root_folder = os.Path(__file__).parents[0]
-    pdf_file_folder = root_folder / "pdfs"
-
     # Load PDF files from the "pdfs" folder under the current workspace and extract the text
-    pdf_texts = extract_pdf_text(folder=pdf_file_folder)
+    pdf_texts = extract_pdf_text(folder="./pdfs")
 
     trunk_id = 0
     for doc in pdf_texts:

@@ -96,10 +96,10 @@ def build():
     conn.commit()
 
     # Use pathLib to get path of PDF files
-    root_folder = Path(__file__).parents[0]
+    root_folder = os.Path(__file__).parents[0]
     pdf_file_folder = root_folder / "pdfs"
 
-    # Load PDF files from the "../pdf" folder under the current workspace, and extract the text
+    # Load PDF files from the "pdfs" folder under the current workspace and extract the text
     pdf_texts = extract_pdf_text(folder=pdf_file_folder)
 
     trunk_id = 0

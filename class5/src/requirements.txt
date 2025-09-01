@@ -1,0 +1,6 @@
+fitz
+langchain_core
+sentence_transformers
+fastapi
+pydantic
+uvicorn

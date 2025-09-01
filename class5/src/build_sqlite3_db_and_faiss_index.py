@@ -1,17 +1,10 @@
-from operator import index
-from langchain_community.document_loaders import PyMuPDFLoader
 import fitz  # PyMuPDF
 from langchain_core.documents import Document
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 import faiss
 import sqlite3
-import numpy as np
 import os
-from pathlib import Path
 import json
-import re
 from typing import List
 
 

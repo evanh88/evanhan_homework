@@ -380,4 +380,4 @@ async def hybrid_search_api(search_query: HybridSearchQuery):
         raise HTTPException(status_code=500, detail=f"Search error: {str(e)}")
 
 if __name__ == "__main__":
-   uvicorn.run("hybrid_search:app", host="127.0.0.1", port=8000, reload=True)
+   uvicorn.run("vector_keyword_hybrid_search:app", host="127.0.0.1", port=8000, reload=True)

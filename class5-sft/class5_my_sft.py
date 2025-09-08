@@ -55,21 +55,20 @@ def format_sample(example):
         if i + 1 < len(segments):
             assistant_text = segments[i+1].strip().replace('Assistant:', '').strip()
             
-            formatted_segments.append({"role": "user", "content": f"{human_text}"})
-            formatted_segments.append({"role": "assistant", "content": f"{assistant_text}"})
+            formatted_segments += f"{user_token}\n{human_text}{end_token}\n"
+            formatted_segments += f"{assistant_token}\n{assistant_text}{end_token}\n"
         else:
             # Handle the case where there is no corresponding assistant segment
-            formatted_segments.append({'role': 'user', 'content': f"{human_text}"})
+            formatted_segments += f"{user_token}\n{human_text}{end_token}\n"
 
-    return {'full_text': '\n'.join([json.dumps(d) for d in formatted_segments])}
-    # return reformatted_segments
+    # return {'full_text': '\n'.join([json.dumps(d) for d in formatted_segments])}
+    return formatted_segments
 
 # -----------------------------
 # 5. Tokenization + Label Masking
 # -----------------------------
 def tokenize(example):
-    formatted = format_sample(example)
-    full_text = formatted["full_text"]
+    full_text = format_sample(example)
     # prompt_text = formatted["prompt"]
 
     tokenized_full = tokenizer(full_text, truncation=True, max_length=2048, padding="max_length")
@@ -82,7 +81,7 @@ def tokenize(example):
 
 tokenized_dataset = dataset.map(tokenize, remove_columns=dataset.column_names)
 print(tokenized_dataset)
-print(tokenized_dataset['train'])
+# print(tokenized_dataset['train'])
 
 # -----------------------------
 # 6. Data Collator

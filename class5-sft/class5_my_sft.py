@@ -188,13 +188,11 @@ else:
 default_lr = 2e-4 if args.finetune_mode == "lora" else 1e-5
 use_fp16 = True if args.finetune_mode == "lora" else (not (torch.cuda.is_available() and torch.cuda.is_bf16_supported()))
 
-print("use_bf16=", use_fp16)
-
 training_args = TrainingArguments(
     output_dir=f"./qwen2.5-1.5b-{args.finetune_mode}-guanaco",
     num_train_epochs=args.epochs,
     per_device_train_batch_size=2,
-    gradient_accumulation_steps=4,
+    gradient_accumulation_steps=6,
     logging_dir="./logs",
     logging_steps=50,
     learning_rate=default_lr if args.lr is None else args.lr,
@@ -205,7 +203,7 @@ training_args = TrainingArguments(
     report_to="tensorboard",
     remove_unused_columns=False,
     logging_first_step=True,
-    evaluation_strategy="steps",
+    eval_strategy="steps",
     eval_steps=200,
 )
 

@@ -118,7 +118,7 @@ def tokenize(example):
         attention_mask.extend([1] * len(seg_ids))
 
     # Truncate to max_length
-    max_length = 4096
+    max_length = 2048
     input_ids = input_ids[:max_length]
     labels = labels[:max_length]
     attention_mask = attention_mask[:max_length]
@@ -192,7 +192,7 @@ training_args = TrainingArguments(
     output_dir=f"./qwen2.5-1.5b-{args.finetune_mode}-guanaco",
     num_train_epochs=args.epochs,
     per_device_train_batch_size=2,
-    gradient_accumulation_steps=6,
+    gradient_accumulation_steps=8,
     logging_dir="./logs",
     logging_steps=50,
     learning_rate=default_lr if args.lr is None else args.lr,

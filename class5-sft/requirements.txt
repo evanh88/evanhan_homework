@@ -1,0 +1,13 @@
+# Week 5 SFT - Requirements
+# Core dependencies for SFT training
+
+# PyTorch and ML frameworks
+torch>=2.0.0
+transformers
+datasets
+peft
+# accelerate==0.34.2
+# bitsandbytes is optional and not supported on Apple Silicon; enable only on Linux/CUDA
+bitsandbytes>=0.39.0
+python-dotenv>=1.0.0
+tensorboardX

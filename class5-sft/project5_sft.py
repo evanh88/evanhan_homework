@@ -82,7 +82,7 @@ def format_segments(example):
         if i + 1 < len(raw_segments):
             assistant_text = raw_segments[i+1].strip().replace('Assistant:', '').strip()
             segments.append((f"{user_token}\n{human_text}{end_token}\n", "user"))
-            segments.append((f"{assistant_token}\n{assistant_text}{end_token}\n", "assistant"))
+            segments.append((f"{assistant_token}\n{assistant_text}\n", "assistant"))
         else:
             segments.append((f"{user_token}\n{human_text}{end_token}\n", "user"))
 
@@ -163,8 +163,8 @@ if args.finetune_mode == "lora":
     model.config.use_cache = False  # Needed for gradient checkpointing
     model = prepare_model_for_kbit_training(model)
     lora_config = LoraConfig(
-        r=8,
-        lora_alpha=16,
+        r=16,
+        lora_alpha=32,
         target_modules=["c_attn", "q_proj", "v_proj", "k_proj", "o_proj"],
         lora_dropout=0.05,
         bias="none",

@@ -1,0 +1,13 @@
+
+# IPython
+streamlit
+audio_recorder_streamlit
+streamlit_float
+SpeechRecognition
+pydub
+torch
+huggingface_hub
+accelerate
+transformers
+gtts
+arxiv

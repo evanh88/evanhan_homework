@@ -1,0 +1,18 @@
+
+# IPython
+SpeechRecognition
+pydub
+torch
+transformers
+huggingface_hub
+accelerate
+gtts
+arxiv
+dotenv
+os
+base64
+uuid
+json
+dotenv
+time
+pydantic

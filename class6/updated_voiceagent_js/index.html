@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Voice Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start; /* Change from center to flex-start */
+      height: 100vh;
+      margin: 0; /* Remove default margin */
+    }
+    .chat-container {
+      width: 800px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      height: 650px;
+      overflow: hidden;
+      margin-top: 18px; /* Add a small margin if you want a little space, or set to 0 for none */
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      border-bottom: 1px solid #ddd;
+    }
+    .message {
+      margin-bottom: 12px;
+      padding: 8px;
+      border-radius: 8px;
+    }
+    .user {
+      text-align: right;
+      color: blue;
+    }
+    .bot {
+      text-align: left;
+      color: green;
+    }
+    .chat-input {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+    }
+    #textInput {
+      flex: 1;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      resize: none;
+    }
+    button {
+      margin-left: 8px;
+      padding: 8px 10px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #micButton {
+      background-color: #28a745;
+      border-radius: 5px;
+      width: 50px;
+      height: 50px;
+      font-size: 18px;
+      transition: background-color 0.3s ease;
+    }
+    #micButton.listening {
+      background-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <!-- Title block added below -->
+    <div style="padding: 18px 0; text-align: center; font-size: 2rem; font-weight: bold; background: #f0f4fa; border-bottom: 1px solid #e0e0e0;">
+      Voice Chat Agent
+    </div>    
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input">
+      <textarea id="textInput" rows="2" placeholder="Type or use mic..."></textarea>
+      <button id="micButton">🎤</button>
+      <button id="submitButton">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const micBtn = document.getElementById('micButton');
+    const sendBtn = document.getElementById('submitButton');
+    const textInput = document.getElementById('textInput');
+    const chatMessages = document.getElementById('chatMessages');
+
+    let mediaRecorder;
+    let audioChunks = [];
+    let lastRecordedBlob = null;
+    let audioURL = null;
+
+    // Speech recognition
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+
+    micBtn.addEventListener('click', async () => {
+      if (micBtn.classList.contains('listening')) {
+        recognition.stop();
+        mediaRecorder.stop();
+        micBtn.classList.remove('listening');
+      } 
+      else {
+        audioChunks = [];
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.start(1000);
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = () => {
+          lastRecordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          stream.getTracks().forEach(track => track.stop());
+
+          audioURL = URL.createObjectURL(lastRecordedBlob);
+        };
+
+        recognition.start();
+        micBtn.classList.add('listening');
+      }
+    });
+
+    recognition.addEventListener('result', (event) => {
+      const transcript = Array.from(event.results)
+        .map(result => result[0].transcript)
+        .join('');
+      textInput.value = transcript;
+    });
+
+    recognition.addEventListener('end', () => {
+      if (micBtn.classList.contains('listening')) {
+        micBtn.classList.remove('listening');
+        mediaRecorder.stop();
+      }
+      // lastRecordedBlob = new Blob(audioChunks, { type: 'audio/webm' }); 
+    });
+
+    function appendCombinedMessage(text, audioSrc, sender) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `message ${sender}`;
+      msgDiv.innerHTML = `<div>${text.replace(/\n/g, "<br>")}</div>`;
+      if (audioSrc) {
+        const audio = document.createElement('audio');
+        audio.controls = true;
+        audio.src = audioSrc;
+        audio.style.display = "block";
+        msgDiv.appendChild(audio);
+        if (sender === "bot") {
+          audio.style.marginLeft = 0;
+          audio.style.marginRight = "auto";
+          audio.play();
+        }
+        else {
+          audio.style.marginLeft = "auto";
+          audio.style.marginRight = 0;
+        }
+      }
+
+      chatMessages.appendChild(msgDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function sendUserMessage(audioBlob, transcript) {
+      if (transcript) {
+        appendCombinedMessage(transcript, audioURL, "user");
+      }
+
+      const formData = new FormData();
+      formData.append("user_text", transcript);
+      formData.append("file", audioBlob, "user_audio.webm");
+
+      const response = await fetch("http://localhost:5001/chat_full", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.audioContent) {
+        audio_src = "data:audio/mp3;base64," + data.audioContent;  // <- Use MP3 MIME
+        appendCombinedMessage(data.llmReply, audio_src, "bot");
+      }
+    }
+
+    async function sendMessage() {
+      const transcript = textInput.value.trim();
+      if (!transcript) return;
+
+      // Clear input after grabbing text
+      textInput.value = "";
+      
+      // If no audio recorded (typed text), send empty blob
+      let audioBlob = null;
+      if (audioChunks.length > 0 && lastRecordedBlob) {
+        audioBlob = lastRecordedBlob;
+      } else {
+        audioBlob = new Blob([], { type: "audio/webm" });
+      }
+
+      // If audioBlob is null, only send text to backend
+      if (audioBlob) {
+        await sendUserMessage(audioBlob, transcript);
+      } else {
+        // Send only text (adjust sendUserMessage or create a new function if needed)
+        await sendUserMessage(null, transcript);
+      }
+
+      audioChunks = [];
+      lastRecordedBlob = null;
+      audioURL = null;
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    textInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // 🔹 Load past history when page opens
+    async function loadHistory() {
+      try {
+        const res = await fetch("http://localhost:3000/history");
+        const data = await res.json();
+        chatMessages.innerHTML = ""; // clear current
+        data.history.forEach(entry => {
+          if (entry.user) {
+            appendCombinedMessage(entry.user.text, entry.user.audio, "user");
+          }
+          if (entry.bot) {
+            appendCombinedMessage(entry.bot.text, entry.bot.audio, "bot");
+          }
+        });
+      } catch (err) {
+        console.error("Failed to load history:", err);
+      }
+    }
+
+    // Load history on page start
+    window.onload = loadHistory;
+  </script>
+</body>
+</html>

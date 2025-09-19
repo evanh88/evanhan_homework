@@ -158,65 +158,47 @@
     function appendCombinedMessage(text, audioSrc, sender) {
       const msgDiv = document.createElement('div');
       msgDiv.className = `message ${sender}`;
-
-      // Create the main row: icon/label and message bubble
-      let rowDiv = document.createElement('div');
-      rowDiv.style.display = 'flex';
-      rowDiv.style.alignItems = 'center';
-      rowDiv.style.justifyContent = sender === 'user' ? 'flex-end' : 'flex-start';
-
-      // Icon/label
-      const labelSpan = document.createElement('span');
-      labelSpan.style.fontWeight = 'bold';
-      labelSpan.style.minWidth = '48px';
-      labelSpan.style.fontSize = '1rem';
-      if (sender === 'user') {
-        labelSpan.textContent = '🧑';
-        labelSpan.style.color = '#007bff';
-        labelSpan.style.marginLeft = '8px';
-        labelSpan.style.textAlign = 'right';
-      } else {
-        labelSpan.textContent = '🤖';
-        labelSpan.style.color = '#28a745';
-        labelSpan.style.marginRight = '8px';
-        labelSpan.style.textAlign = 'left';
+      
+      // Structure: icon/label on left for bot, right for user
+      let contentHTML = "";
+      if (sender === "user") {
+        contentHTML = `
+          <div style="display: flex; justify-content: flex-end; align-items: center;">
+            <div style="background: #eaf3ff; border-radius: 8px; padding: 8px 12px; max-width: 70%; word-break: break-word;">
+              ${text.replace(/\n/g, "<br>")}
+            </div>
+            <span style="font-weight:bold; color:#007bff; margin-left:8px; min-width: 48px; text-align: right;">🧑 You</span>
+          </div>
+        `;
+      } else if (sender === "bot") {
+        contentHTML = `
+          <div style="display: flex; justify-content: flex-start; align-items: center;">
+            <span style="font-weight:bold; color:#28a745; margin-right:8px; min-width: 48px; text-align: left;">🤖 Bot</span>
+            <div style="background: #eafbe7; border-radius: 8px; padding: 8px 12px; max-width: 70%; word-break: break-word;">
+              ${text.replace(/\n/g, "<br>")}
+            </div>
+          </div>
+        `;
       }
 
-      // Message bubble
-      const bubbleDiv = document.createElement('div');
-      bubbleDiv.style.background = sender === 'user' ? '#eaf3ff' : '#eafbe7';
-      bubbleDiv.style.borderRadius = '8px';
-      bubbleDiv.style.padding = '8px 12px';
-      bubbleDiv.style.maxWidth = '70%';
-      bubbleDiv.style.wordBreak = 'break-word';
-      bubbleDiv.innerHTML = text.replace(/\n/g, "<br>");
+      msgDiv.innerHTML = contentHTML;
 
-      // Arrange icon and bubble
-      if (sender === 'user') {
-        rowDiv.appendChild(bubbleDiv);
-        rowDiv.appendChild(labelSpan);
-      } else {
-        rowDiv.appendChild(labelSpan);
-        rowDiv.appendChild(bubbleDiv);
-      }
-
-      msgDiv.appendChild(rowDiv);
-
-      // Audio bubble aligned with text bubble
       if (audioSrc) {
         const audio = document.createElement('audio');
         audio.controls = true;
         audio.src = audioSrc;
         audio.style.display = "block";
         audio.style.marginTop = "6px";
-        audio.style.maxWidth = "70%";
-        // Align audio with the text bubble
-        audio.style.marginLeft = sender === 'user' ? 'auto' : '0';
-        audio.style.marginRight = sender === 'user' ? '0' : 'auto';
+        if (sender === "bot") {
+          audio.style.marginLeft = 0;
+          audio.style.marginRight = "auto";
+          audio.play();
+        } else {
+          audio.style.marginLeft = "auto";
+          audio.style.marginRight = 0;
+        }
         msgDiv.appendChild(audio);
-        if (sender === "bot") audio.play();
       }
-
       chatMessages.appendChild(msgDiv);
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }

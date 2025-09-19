@@ -99,6 +99,6 @@ async def chat_service(user_text: str = Form(...), file: UploadFile = File(...))
     # Save chat history to file
     log_file_path = f"history/{HISTORY_FILE}"
     with open(log_file_path, "w") as f:
-        json.dump(log_file_path, f, indent=2)
+        json.dump(chat_history, f, indent=2)
 
     return tts_response

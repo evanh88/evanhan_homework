@@ -158,7 +158,7 @@
     function appendCombinedMessage(text, audioSrc, sender) {
       const msgDiv = document.createElement('div');
       msgDiv.className = `message ${sender}`;
-      
+
       // Structure: icon/label on left for bot, right for user
       let contentHTML = "";
       if (sender === "user") {
@@ -167,13 +167,13 @@
             <div style="background: #eaf3ff; border-radius: 8px; padding: 8px 12px; max-width: 70%; word-break: break-word;">
               ${text.replace(/\n/g, "<br>")}
             </div>
-            <span style="font-weight:bold; color:#007bff; margin-left:8px; min-width: 48px; text-align: right;">🧑 You</span>
+            <span style="font-weight:bold; color:#007bff; margin-left:8px; min-width: 48px; text-align: right;"> 🧑 </span>
           </div>
         `;
       } else if (sender === "bot") {
         contentHTML = `
           <div style="display: flex; justify-content: flex-start; align-items: center;">
-            <span style="font-weight:bold; color:#28a745; margin-right:8px; min-width: 48px; text-align: left;">🤖 Bot</span>
+            <span style="font-weight:bold; color:#28a745; margin-right:8px; min-width: 48px; text-align: left;"> 🤖 </span>
             <div style="background: #eafbe7; border-radius: 8px; padding: 8px 12px; max-width: 70%; word-break: break-word;">
               ${text.replace(/\n/g, "<br>")}
             </div>

@@ -27,7 +27,7 @@ This project implements a voice chatbot based on the Week 3 assignment on voice 
    ```
 
 4. **Access the Web Interface**:
-   Upon startup, the frontend UI implemented by index.html will be automatically loaded (`http://127.0.0.1:5001`)
+   Open a browser to go to 'http://127.0.0.1:5001', the page for the voice chatbot will be automatically loaded.
 
 ## Usage
 

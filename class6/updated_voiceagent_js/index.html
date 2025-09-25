@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Voice Chatbot</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -155,9 +156,35 @@
       // lastRecordedBlob = new Blob(audioChunks, { type: 'audio/webm' }); 
     });
 
+    function looksLikeMarkdown(text) {
+      const patterns = [
+        /^#{1,6}\s/m,              // headings
+        /\*\*.*?\*\*/,            // bold
+        /\*.*?\*/,                // italics
+        /`{1,3}.*?`{1,3}/,        // inline or fenced code
+        /^\s*[-+*]\s/m,           // unordered list
+        /^\s*\d+\.\s/m,           // ordered list
+        /\[.*?\]\(.*?\)/,         // links
+        /^```/,                   // code blocks
+        /\|.*?\|/,                // tables
+      ];
+
+      return patterns.some(pattern => pattern.test(text));
+    }
+
     function appendCombinedMessage(text, audioSrc, sender) {
       const msgDiv = document.createElement('div');
       msgDiv.className = `message ${sender}`;
+      let html_text = ""
+
+      if (sender === "bot") {
+        // If it's markdown, parse to HTML
+        if (looksLikeMarkdown(text)) {
+          html_text = marked.parse(text);  // fixed from "markdown" to "text"
+        } else {
+          html_text = text.replace(/\n/g, "<br>");
+        }
+      }
 
       // Structure: icon/label on left for bot, right for user
       let contentHTML = "";
@@ -175,7 +202,7 @@
           <div style="display: flex; justify-content: flex-start; align-items: center;">
             <span style="font-weight:bold; color:#28a745; margin-right:8px; min-width: 48px; text-align: left;"> 🤖 </span>
             <div style="background: #eafbe7; border-radius: 8px; padding: 8px 12px; max-width: 70%; word-break: break-word;">
-              ${text.replace(/\n/g, "<br>")}
+              ${html_text}
             </div>
           </div>
         `;

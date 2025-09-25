@@ -72,7 +72,7 @@ def execute_arxiv_query(llm, query, max_results=5):
         # Add summary of summaries
         summary_of_summaries = generate_summary_of_summaries(llm, results, query)
         response += f"## Summary of Research Papers:\n\n{summary_of_summaries}\n\n"
-        response += "## Individual Papers\n\n"
+        response += "## Individual Papers:\n\n"
         
         for i, paper in enumerate(results, 1):
             response += f"{i}. **{paper['title']}**\n"

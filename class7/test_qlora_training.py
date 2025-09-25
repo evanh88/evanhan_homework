@@ -64,7 +64,7 @@ torch.cuda.empty_cache()
 
 # Load the fine-tuned model and perform inference
 print("Loading fine-tuned model...")
-"""
+
 # Load the base model first
 ft_model, _ = FastLanguageModel.from_pretrained(
     model_name, # Load base model
@@ -79,17 +79,6 @@ ft_tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 # Load the adapter weights from the checkpoint
 ft_model.load_adapter("llama3-8b-qlora-finetuned")
-"""
-
-# Load base model + adapter in one step
-ft_model, ft_tokenizer = FastLanguageModel.from_pretrained(
-    model_name = "unsloth/llama-3.1-8b-unsloth-bnb-4bit",  # or your base model
-    max_seq_length = 2048,
-    dtype = None,
-    load_in_4bit = True,
-    adapter_path = "llama3-8b-qlora-finetuned",  # ✅ Your fine-tuned adapter folder
-    token = False  # Optional: if model is gated on Hugging Face
-)
 
 print("Generating responses from fine-tuned model...")
 for que in test_questions:

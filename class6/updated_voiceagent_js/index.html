@@ -212,16 +212,25 @@
       formData.append("user_text", transcript);
       formData.append("file", audioBlob, "user_audio.webm");
 
-      const response = await fetch("http://localhost:5001/chat_full", {
-        method: "POST",
-        body: formData,
-      });
+      try {
+        const response = await fetch("http://localhost:5001/chat_full", {
+          method: "POST",
+          body: formData,
+        });
 
-      const data = await response.json();
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
 
-      if (data.audioContent) {
-        audio_src = "data:audio/mp3;base64," + data.audioContent;  // <- Use MP3 MIME
-        appendCombinedMessage(data.llmReply, audio_src, "bot");
+        const data = await response.json();
+
+        if (data.audioContent) {
+          audio_src = "data:audio/mp3;base64," + data.audioContent;  // <- Use MP3 MIME
+          appendCombinedMessage(data.llmReply, audio_src, "bot");
+        }
+
+      } catch (error) {
+        console.error('Error:', error.message);
       }
     }
 
@@ -264,7 +273,7 @@
     // 🔹 Load past history when page opens
     async function loadHistory() {
       try {
-        const res = await fetch("http://localhost:3000/history");
+        const res = await fetch("http://localhost:5001/history");
         const data = await res.json();
         chatMessages.innerHTML = ""; // clear current
         data.history.forEach(entry => {

@@ -27,18 +27,19 @@ This project implements a voice chatbot based on the Week 3 assignment on voice 
    ```
 
 4. **Access the Web Interface**:
-   Open a browser to go to 'http://127.0.0.1:5001', the page for the voice chatbot will be automatically loaded.
+   Open a browser to go to 'http://127.0.0.5001', the page for the voice chatbot will be automatically loaded.
 
 ## Usage
 
 The voice agent can handle three types of queries:
 
 ### 1. Mathematical Calculations (add, multiply)
-- **Example**: "Add 2 to 5?"
-- **Response**: {"function": "add"}
+- **Example**: "What is the result of adding 2 to 5?"
+- **Response**: {"function": "add", "expression": "add 2 to 5"}
 
 ### 2. ArXiv Paper Searches  
 - **Example**: "Find papers about neural networks"
+- **Response**: {"function": "query_arxiv", "query": "neural networks"}
 - The agent will search arXiv, return a summary on the abstracts of the relevant papers, and detailed abstracts of the papers.
 
 ### 3. General Conversation

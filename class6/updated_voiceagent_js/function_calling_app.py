@@ -1,4 +1,6 @@
 from fastapi import FastAPI, UploadFile, Form, File
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import FileResponse 
 import speech_recognition as sr
 from huggingface_hub import login
@@ -17,6 +19,13 @@ from llm_prompt_query import query_llm  # file: llm_prompt_query.py
 
 
 app = FastAPI(title="Voice Chatbot with STT and TTS")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 dotenv.load_dotenv()
 login(token=os.getenv("LLM_KEY"))
@@ -58,6 +67,8 @@ def text_to_speech(text: str, id: str):
     except FileNotFoundError:
         return JSONResponse({"error": "Audio file not found"}, status_code=404), ""
     
+Mount the static directory
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 @app.get("/")
 async def read_index():
@@ -71,6 +82,8 @@ class UserForm(BaeseModel):
 
 @app.post("/chat_full/")
 async def chat_service(user_text: str = Form(...), file: UploadFile = File(...)):
+    
+    print(f"Received user request: {user_text}")
     
     # Save user audio if provided
     if (file and file.size > 0):

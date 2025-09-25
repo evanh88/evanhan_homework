@@ -9,7 +9,8 @@ def generate_summary_of_summaries(llm, papers, query):
                                    for i, paper in enumerate(papers)])
         
         # Create a prompt for summarization
-        summary_prompt = f"""Based on the following academic papers related to "{query}", provide a comprehensive summary that highlights:
+        summary_prompt = f"""You are a helpful assistant. Based on the following abstracts from academic papers related to "{query}",
+please provide a summary of the abstracts:
 
 1. The main themes and topics across all papers
 2. Common methodologies or approaches used
@@ -17,10 +18,11 @@ def generate_summary_of_summaries(llm, papers, query):
 4. Any emerging trends or patterns
 5. How these papers relate to each other
 
-Papers and Abstracts:
-{all_abstracts}
+Papers and Abstracts are as follows:
+"{all_abstracts}"
 
-Please provide a concise but comprehensive summary:"""
+provide a concise but comprehensive summary that highlights:
+"""
 
         # Generate summary using the LLM
         summary_outputs = llm(summary_prompt, max_new_tokens=200)
@@ -68,7 +70,7 @@ def execute_arxiv_query(llm, query, max_results=5):
         response = f"Found {len(results)} papers for query: '{query}'\n\n"
         
         # Add summary of summaries
-        summary_of_summaries = generate_summary_of_summaries(llm, results, query)
+        summary_of_summaries = generate_summary_of_summaries(llm, results, query)["generated_text"]
         response += f"## Summary of Research Papers:\n\n{summary_of_summaries}\n\n"
         response += "## Individual Papers\n\n"
         

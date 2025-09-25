@@ -1,7 +1,6 @@
 
 # IPython
 SpeechRecognition
-pydub
 torch
 transformers
 huggingface_hub

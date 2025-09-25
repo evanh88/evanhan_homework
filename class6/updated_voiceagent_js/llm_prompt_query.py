@@ -5,7 +5,7 @@ import torch
 
 from typing import Dict
 from function_tools import * # file: function_tools.py
-
+from build_prompt import build_chat_prompt
 
 SYSTEM_PROMPT = {
     "role": "system",
@@ -18,21 +18,12 @@ To call a tool for math calculation, you must respond in this format: {\"functio
 To call a tool for academic paper search, you must respond in this format: {\"function\": \"function_name\", \"query\": \"the query string\"}. \
 If the user input is not a request for a function call, respond normally."}
 
-
-# Meta's LLaMA 3 instruct special tokens
-BOT = "<|begin_of_text|>"
-EOT = "<|end_of_text|>"
-SOF = "<|start_header_id|>"
-EOF = "<|end_header_id|>"
-EOM = "<|eom_id|>"  # End of message, for multi-turn conversations
-EOTN = "<|eot_id|>\n"  # End of turn
-
 # login(token=os.getenv("LLM_KEY"))
 llm = pipeline("text-generation", model="meta-llama/Llama-3.2-3B-Instruct", device=0 if torch.cuda.is_available() else -1)
 
 def query_llm(chat_history):            
     # Construct the full prompt
-    prompt = build_prompt(SYSTEM_PROMPT, chat_history)
+    prompt = build_chat_prompt(SYSTEM_PROMPT, chat_history)
 
     full_output = llm(prompt, max_new_tokens=500)[0]['generated_text']
 

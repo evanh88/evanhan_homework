@@ -67,8 +67,8 @@ def text_to_speech(text: str, id: str):
     except FileNotFoundError:
         return JSONResponse({"error": "Audio file not found"}, status_code=404), ""
     
-Mount the static directory
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+# Mount the static directory
+#app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 @app.get("/")
 async def read_index():

@@ -180,7 +180,7 @@
       if (sender === "bot") {
         // If it's markdown, parse to HTML
         if (looksLikeMarkdown(text)) {
-          html_text = marked.parse(text);  // fixed from "markdown" to "text"
+          html_text = DOMPurify.sanitize(marked.parse(text));
         } else {
           html_text = text.replace(/\n/g, "<br>");
         }

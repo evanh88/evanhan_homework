@@ -26,10 +26,10 @@ def execute_function_call(llm, response_text):
             try:
                 function_data = json.loads(match.group(0))
                 if (function_data["function"] == "calculate"):
-                    print(f"Calling function 'calculate' with expression: {function_data["expression"]}")
+                    print(f"Calling function 'calculate' with expression: {function_data['expression']}")
                     return calculate(function_data["expression"])
                 elif (function_data["function"] == "query_arxiv"):
-                    print(f"Calling function 'execute_arxiv_query' with query: {function_data["query"]}")
+                    print(f"Calling function 'execute_arxiv_query' with query: {function_data['query']}")
                     return execute_arxiv_query(llm, function_data["query"])
                 else:
                     return f"Unknown function: {function_data['function']}"

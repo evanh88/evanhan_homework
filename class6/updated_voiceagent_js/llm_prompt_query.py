@@ -1,6 +1,8 @@
 from transformers import pipeline
+from huggingface_hub import login
 import re   
 import torch
+import os
 
 from typing import Dict
 from function_tools import * # file: function_tools.py
@@ -17,7 +19,7 @@ To call a tool for math calculation, you must respond in this format: {\"functio
 To call a tool for academic paper search, you must respond in this format: {\"function\": \"function_name\", \"query\": \"the query string\"}. \
 If the user input is not a request for a function call, respond normally."}
 
-# login(token=os.getenv("LLM_KEY"))
+login(token=os.getenv("LLM_KEY"))
 llm = pipeline("text-generation", model="meta-llama/Llama-3.2-3B-Instruct", device=0 if torch.cuda.is_available() else -1)
 
 def query_llm(chat_history):            

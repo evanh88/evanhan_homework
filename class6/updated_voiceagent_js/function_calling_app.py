@@ -5,7 +5,7 @@ from starlette.responses import FileResponse
 import speech_recognition as sr
 from huggingface_hub import login
 import torch
-from gtts import gTTS
+from gtts import gTTS 
 import base64
 import uuid
 import json

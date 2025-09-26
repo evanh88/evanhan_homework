@@ -1,17 +1,15 @@
-
-# IPython
+uvicorn
+fastapi
 SpeechRecognition
-torch
 transformers
+starlette
+torch
 huggingface_hub
-accelerate
 gtts
 arxiv
 dotenv
-os
-base64
 uuid
-json
 dotenv
-time
 pydantic
+python-multipart
+sympy

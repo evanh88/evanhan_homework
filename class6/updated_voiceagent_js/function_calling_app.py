@@ -11,9 +11,11 @@ import uuid
 import json
 import os, dotenv
 import time
-import time
+import re
 from starlette.responses import JSONResponse
 from pydantic import BaseModel as BaeseModel
+from markdown import markdown
+from bs4 import BeautifulSoup
 
 from llm_prompt_query import query_llm  # file: llm_prompt_query.py
 
@@ -43,30 +45,40 @@ r = sr.Recognizer()
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
     
+def looks_like_markdown(text: str) -> bool:
+    markdown_patterns = [
+        r'^#{1,6}\s',                  # headings like "# Heading"
+        r'\*\*.*?\*\*',                # bold **text**
+        r'\*.*?\*',                    # italics *text*
+        r'`{1,3}.*?`{1,3}',            # inline or fenced code
+        r'^\s*[-+*]\s',                # unordered list
+        r'^\s*\d+\.\s',                # ordered list
+        r'\[.*?\]\(.*?\)',            # links [text](url)
+        r'^```',                      # code blocks
+        r'\|.*?\|',                   # tables
+    ]
+
+    for pattern in markdown_patterns:
+        if re.search(pattern, text, re.MULTILINE):
+            return True
+    return False
+
+def markdown_to_plain_text(md_text):
+    html = markdown(md_text)
+    soup = BeautifulSoup(html, "html.parser")
+    return soup.get_text(separator="\n")  # optional: separator=" " or "\n"
 
 def text_to_speech(text: str, id: str):
 
     audio_file = f"temp_tts_audio{id}.mp3"
     audio_file_path = f"audio/{audio_file}"
-    text_convert = "".join(text[:500])
+    text_convert = "".join(text[:500])  # only convert part of the text
     tts = gTTS(text=text_convert, lang='en') # only the first 10 lines
     tts.save(audio_file_path)
 
-    try:
-        with open(audio_file_path, "rb") as audio:
-            base64_data = base64.b64encode(audio.read()).decode('utf-8')
-            file_type = "audio/mpeg"  # Adjust based on your file type
-            json_data = {
-                "fileName": audio_file,
-                "fileType": file_type,
-                "llmReply": text,
-                "audioContent": base64_data}
-        
-        return JSONResponse(json_data), audio_file_path
-    
-    except FileNotFoundError:
-        return JSONResponse({"error": "Audio file not found"}, status_code=404), ""
-    
+    return audio_file_path
+
+
 # Mount the static directory
 #app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
@@ -102,16 +114,38 @@ async def chat_service(user_text: str = Form(...), file: UploadFile = File(...))
 
     chat_history.append({"role": "user", "text": user_text})
 
+    # Call to query LLM
     llm_response = query_llm(chat_history)
 
-    id_ = str(time.time())
-    tts_response, response_audio_file_path = text_to_speech(llm_response, id_)
+    llm_response_raw_text = ""
+    if looks_like_markdown(llm_response):
+        llm_response_plain_text = markdown_to_plain_text(llm_response)
+    else:
+        llm_response_plain_text = llm_response
+
+    # Convert raw text to speech
+    id_time = str(time.time())
+    audio_file_path = text_to_speech(llm_response_plain_text, id_time)
+
+    # Build response
+    try:
+        with open(audio_file_path, "rb") as audio:
+            base64_data = base64.b64encode(audio.read()).decode('utf-8')
+            file_type = "audio/mpeg"  # Adjust based on your file type
+            json_data = {
+                "filePath": audio_file_path,
+                "fileType": file_type,
+                "llmReply": llm_response,  # Use the text format returned by LLM here. Client will convert Markdown text it to HTML
+                "audioContent": base64_data}
+    except FileNotFoundError:
+        return JSONResponse({"error": "Audio file not found"}, status_code=404), ""
 
     # Append to chat history
-    chat_history.append({"role": "assistant", "text": llm_response, "audio": response_audio_file_path})
+    chat_history.append({"role": "assistant", "text": llm_response_plain_text, "audio": audio_file_path})
     # Save chat history to file
     log_file_path = f"history/{HISTORY_FILE}"
     with open(log_file_path, "w") as f:
         json.dump(chat_history, f, indent=2)
 
-    return tts_response
+    # Return data to client
+    return JSONResponse(json_data)

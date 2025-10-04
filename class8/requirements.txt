@@ -1,0 +1,13 @@
+# python-dotenv
+requests
+langchain
+langchain_huggingface
+langchain_community
+huggingface_hub
+transformers
+accelerate
+torch
+pypdf
+PyPDF2
+arxiv
+dotenv

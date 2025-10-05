@@ -8,7 +8,6 @@ from langchain.prompts import PromptTemplate
 from langchain.schema import Document
 from langchain.prompts import PromptTemplate
 from langchain.chains.combine_documents.refine import RefineDocumentsChain
-# from langchain.chains.llm import LLMChain  # this is needed for HuggingFacePipeline
 from langchain.llms import HuggingFacePipeline
 from langchain_core.runnables import RunnableLambda
 from langchain_core.output_parsers.string import StrOutputParser
@@ -22,23 +21,12 @@ from dotenv import load_dotenv
 load_dotenv()
 login(token=os.getenv("LLM_KEY"))
 
-# Initialize InferenceClient with your Hugging Face token
-# client = InferenceClient(model)
-
-# llm = pipeline("text-generation", model="avans06/Meta-Llama-3.2-8B-Instruct", device=0 if torch.cuda.is_available() else -1)
-
-# llm = pipeline("text-generation", model="meta-llama/Llama-3.2-3B-Instruct", device=0 if torch.cuda.is_available() else -1)
-
-# device=0 if torch.cuda.is_available() else -1
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 if torch.cuda.is_available():
     model_id = "meta-llama/Llama-3.1-8B-Instruct"
 else:
     model_id = "meta-llama/Llama-3.2-3B-Instruct"
-
-# model_id = "Qwen/Qwen2.5-7B-Instruct"
-# model_id = "meta-llama/Llama-3.2-3B-Instruct"
 
 print("device: ", device)
 print(f"model_id: {model_id}\n")
@@ -72,33 +60,19 @@ if tokenizer.pad_token is None:
     
 # llm.tokenizer.pad_token_id = model.config.eos_token_id
 
-# === Step 4: Manual batching of chunk summaries ===
 import re
 import json
 from pathlib import Path
 
-
 def load_pdf_chunks_with_debug(pdf_path, chunk_size=1000, chunk_overlap=200):
     loader = PyPDFLoader(pdf_path)
     pages = loader.load()
-
-#            from split_doc_pages import split_documents_by_tokens_with_debug  # if in another file
-#            docs = split_documents_by_tokens_with_debug(pages, tokenizer, chunk_size=2048, chunk_overlap=200)
 
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap
     )
     chunks = text_splitter.split_documents(pages)
-
-    # === Step 3: Hugging Face text-generation pipeline ===
-    # hf_pipeline = pipeline(
-    #     "text-generation",
-    #     model=model_id,
-    #     tokenizer=tokenizer,
-    #     device=0,
-    #     max_new_tokens=256,
-    # )
 
     for i, chunk in enumerate(chunks):
         tokens = tokenizer(chunk.page_content, return_tensors="pt")["input_ids"].shape[1]
@@ -113,6 +87,7 @@ def load_pdf_chunks_with_debug(pdf_path, chunk_size=1000, chunk_overlap=200):
         if i > 0:
             print(f"    Overlap with previous chunk ({chunk_overlap} chars): '{overlap_text[:50]}...'")
     return chunks
+
 
 def extract_user_assistant_pairs(text):
     """
@@ -197,7 +172,7 @@ def summarize_chunks(
 
                 summary_id += 1
 
-        # For testing, break after two batches are done
+        # For testing, break after a few batches are done
     #    if i == 4:
     #        break
 
@@ -408,21 +383,21 @@ def process_pdf(folder, chunk_size=2000, chunk_overlap=150):
 
             total_papers_examined += 1
 
-            # === Step 1: Load PDF and split into chunks with token count & overlap info ===
+            # Step 1: Load PDF and split into chunks with token count & overlap info ===
             chunks = load_pdf_chunks_with_debug(pdf_path, chunk_size, chunk_overlap)
 
             # Step 2: summarize each chunk
-            # chunk_summaries = summarize_chunks(docs, summarizer, batch_size=4)
             prompt_template = "<|begin_of_text|><|start_header_id|>user<|end_header_id|>\nSummarize the following text:\n\n{input}\n<|start_header_id|>assistant<|end_header_id|>\n"
             chunk_summaries = summarize_chunks(chunks, summarizer, batch_size=32, prompt_template=prompt_template)
             
+        # For testing: getting final paired summaries from saved summaries
         #    with open("summaries.jsonl", "r", encoding="utf-8") as f:
         #        chunk_summaries = list(map(json.loads, f))
 
             print(f"\nTotal chunks: {len(chunks)}")
             print(f"Total chunk summaries: {len(chunk_summaries)}")
 
-            # === Step 5: Combine chunk summaries into Documents ===
+            # Combine chunk summaries into Documents ===
             summary_docs = [
                 Document(
                     page_content=summary["text"],
@@ -479,173 +454,8 @@ def process_pdf(folder, chunk_size=2000, chunk_overlap=150):
         for item in final_summaries:
             f.write(json.dumps(item) + "\n")
 
-"""
-            # === Step 6: Final summarization using LangChain (stuff/map_reduce) ===
-            llm = HuggingFacePipeline(pipeline=summarizer)
 
-            # Use "stuff" now since input is small (just summaries)
-            final_chain = load_summarize_chain(llm, chain_type="stuff")
-            summary = final_chain.run(summary_docs)
-
-            print("Final summpary: ", summary)
-
-            summary2 = ""
-
-            while True:
-                # inp = input("Which response would you like to accept (1/2)?")
-                inp = 1
-
-                if inp == 1:
-                    summaries.append({
-                        "paper#": total_papers_examined,
-                        "chosen": final_summaries
-,
-                        "chosen": summary2
-                    })
-
-                    break
-                elif inp == 2:
-                    summaries.append({
-                        "paper#": total_papers_examined,
-                        "chosen": summary2,
-                        "rejected": summary
-                    })
-
-                    break
-                else:
-                    continue
-
-
-"""
-
-
-
-def get_abstracts_and_generate_summary_pairs(max_results=10):
-
-    # Get arXiv papers and save the abstracts to file
-    
-    ### get_arxiv_papers("quantum computing", max_results)
-
-    with open(ABSTRACTS_FILE, "r") as f:
-        dataset = json.load(f)
-    
-    summary_pairs = []
-    total_papers_examined = 0
-    for paper in dataset:
-        print("=" * 50)
-        
-        print(f"Generating summary pairs for paper# {total_papers_examined}: {paper['id']}, {paper['title']}")
-         # Generate Q&A pairs for the abstract
-         # list_qas = generate_qa(paper['summary'])
-        
-        response1 = llama_abstract_summary(paper['summary'], max_tokens=100, temperature=0.7, round=1)
-        response2 = llama_abstract_summary(paper['summary'], max_tokens=100, temperature=0.7, round=2)
-        if response1 == "Error: failed to generate response" or response2 == "Error: failed to generate response":
-            print("Error generating summaries, go to next paper")
-            continue
-
-        print(f"Response1:\n{response1}")
-        print(f"Response2:\n{response1}")
-
-        while True:
-            inp = input("Which response would you like to accept (1/2)?")
-
-            if inp == 1:
-                summary_pairs.append({
-                    "paper#": {total_papers_examined},
-                    "chosen": "{response1}",
-                    "rejected": "{response2}"
-                })
-
-                break
-            elif inp == 2:
-                summary_pairs.append({
-                    "paper#": {total_papers_examined},
-                    "chosen": response2,
-                    "rejected": response1
-                })
-
-                break
-            else:
-                continue
-
-        with open("reward_data.jsonl", "w") as f:
-            for item in summary_pairs:
-                f.write(json.dumps(item) + "\n")
-
-        total_papers_examined += 1
-        if total_papers_examined == 10:
-            break
-
-def get_abstracts_and_generate_summary_once(max_results=10):
-
-    # Get arXiv papers and save the abstracts to file
-    
-    ### get_arxiv_papers("quantum computing", max_results)
-
-    # with open(ABSTRACTS_FILE, "r") as f:
-    #    dataset = json.load(f)
-    
-    summaries = []
-    total_papers_examined = 0
-    for paper in dataset:
-        print("=" * 50)
-        
-        total_papers_examined += 1
-        
-        print(f"Generating summaries for paper# {total_papers_examined}: {paper['id']}, {paper['title']}")
-         # Generate Q&A pairs for the abstract
-         # list_qas = generate_qa(paper['summary'])
-        
-        response1 = llama_abstract_summary(paper['summary'], max_tokens=512, temperature=0, round=1)
-        if response1 == "Error: failed to generate response":
-            continue
-
-        print(f"Response1:\n{response1}")
-
-        response2 = ""
-
-        while True:
-            # inp = input("Which response would you like to accept (1/2)?")
-            inp = 1
-
-            if inp == 1:
-                summaries.append({
-                    "paper#": total_papers_examined,
-                    "chosen": response1,
-                    "rejected": response2
-                })
-
-                break
-            elif inp == 2:
-                summaries.append({
-                    "paper#": total_papers_examined,
-                    "chosen": response2,
-                    "rejected": response1
-                })
-
-                break
-            else:
-                continue
-
-        with open("reward_data_summaries.jsonl", "w") as f:
-            for item in summaries:
-                f.write(json.dumps(item) + "\n")
-
-        if total_papers_examined == 10:
-            break
-
-
-# Example usage
-# get_abstracts_and_generate_summary_pairs(10)
-# get_abstracts_and_generate_summary_once(10)
-
+# Run the program
 pdfs_folder = './pdfs'
 
 process_pdf(pdfs_folder)
-
-# get_arxiv_papers("machine learning", max_results=100)
-
-# read_abstracts_and_generate_qas(max_results=100)
-
-# generate_synthetic_qa_prompts()

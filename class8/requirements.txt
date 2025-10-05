@@ -11,3 +11,7 @@ pypdf
 PyPDF2
 arxiv
 dotenv
+datasets
+trl
+rouge_score
+bert_score

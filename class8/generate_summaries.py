@@ -1,13 +1,14 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from huggingface_hub import login
 from langchain_huggingface import HuggingFacePipeline
+from langchain_community.llms import HuggingFacePipeline
 from langchain.chains.summarize import load_summarize_chain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.prompts import PromptTemplate
 from langchain.schema import Document
 from langchain.prompts import PromptTemplate
 from langchain.chains.combine_documents.refine import RefineDocumentsChain
-from langchain.chains.llm import LLMChain  # this is needed for HuggingFacePipeline
+# from langchain.chains.llm import LLMChain  # this is needed for HuggingFacePipeline
 from langchain.llms import HuggingFacePipeline
 from langchain_core.runnables import RunnableLambda
 from langchain_core.output_parsers.string import StrOutputParser
@@ -28,18 +29,19 @@ login(token=os.getenv("LLM_KEY"))
 
 # llm = pipeline("text-generation", model="meta-llama/Llama-3.2-3B-Instruct", device=0 if torch.cuda.is_available() else -1)
 
-device=0 if torch.cuda.is_available() else -1
+# device=0 if torch.cuda.is_available() else -1
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-if device == 0:
+if torch.cuda.is_available():
     model_id = "meta-llama/Llama-3.1-8B-Instruct"
 else:
     model_id = "meta-llama/Llama-3.2-3B-Instruct"
 
-
 # model_id = "Qwen/Qwen2.5-7B-Instruct"
-model_id = "meta-llama/Llama-3.2-3B-Instruct"
+# model_id = "meta-llama/Llama-3.2-3B-Instruct"
 
-print(f"model_id: {model_id}")
+print("device: ", device)
+print(f"model_id: {model_id}\n")
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForCausalLM.from_pretrained(
@@ -48,13 +50,15 @@ model = AutoModelForCausalLM.from_pretrained(
     dtype="auto"
 )
 
+model.to(device)
+
 # Build summarization pipeline
 summarizer = pipeline(
     "text-generation",
     model=model,
     tokenizer=tokenizer,
     max_new_tokens=256,
-    dtype='float16',
+    dtype=torch.bfloat16,
     temperature=0.1,
     repetition_penalty=1.1
 )
@@ -152,7 +156,7 @@ def summarize_chunks(
         chunk_batch = chunks[i:i + batch_size]
         results = hf_pipeline(batch, batch_size=batch_size)
 
-        print("Full output of summarizing chunk batch: \n", results)
+        # print("Full output of summarizing chunk batch: \n", results)
 
         for j, result in enumerate(results):
             full_output = result[0]["generated_text"]
@@ -194,8 +198,8 @@ def summarize_chunks(
                 summary_id += 1
 
         # For testing, break after two batches are done
-        if i == 4:
-            break
+    #    if i == 4:
+    #        break
 
     with open(save_path, "w", encoding="utf-8") as f:
         for summary in all_summaries:
@@ -206,10 +210,10 @@ def summarize_chunks(
     return all_summaries
 
 
-def extract_summary_segment_for_initial_chain(text)
+def extract_summary_segment_for_initial_chain(text):
     # Regex including the starting sentence
     pattern = re.compile(
-        r"You are an expert summarizer.*?CONTENT:\s*(.*?)\s*SUMMARY:\s*(.*)",
+        r"You are an expert summarizer. Write a short summary of the following content.\s*CONTENT:\s*(.*?)\s*SUMMARY:\s*(.*)",
         re.DOTALL
     )
 
@@ -218,30 +222,56 @@ def extract_summary_segment_for_initial_chain(text)
         content = match.group(1).strip()
         summary = match.group(2).strip()
         result = {
-            "Content": content,
+            # "Content": content,
             "Summary": summary
         }
-        print(result)
+        print(f"Initial chain summary:\n{result}")
+        return summary
+
     else:
         print("No match found")
 
 
-def extract_summary_segment_for_refine_chain(text)
+def extract_summary_segment_for_refine_chain(text):
     # Regex including the starting sentence
     pattern = re.compile(
-        r"You are an expert summarizer.*?CONTENT:\s*(.*?)\s*SUMMARY:\s*(.*)",
+        r"You are an expert summarizer.*\s*Existing summary:\s*(.*?)\s*New information:\s*(.*?)Final summary:\s*(.*)",
         re.DOTALL
     )
 
     match = pattern.search(text)
     if match:
-        content = match.group(1).strip()
-        summary = match.group(2).strip()
+        existing_summary = match.group(1).strip()
+        new_information = match.group(2).strip()
+        final_summary = match.group(3).strip()
         result = {
-            "Content": content,
-            "Summary": summary
+            # "Content": content,
+            "Summary": final_summary
         }
-        print(result)
+        print(f"Refine chain summary:\n{result}")
+        return final_summary
+
+    else:
+        print("No match found")
+
+def extract_summary_segment_for_reduce_map(text):
+    # Regex including the starting sentence
+    pattern = re.compile(
+        r"You are an expert summarizer.*\s*Summaries:\s*(.*?)\s*Final summary.*words\):\s*(.*)",
+        re.DOTALL
+    )
+
+    match = pattern.search(text)
+    if match:
+        summaries = match.group(1).strip()
+        final_summary = match.group(2).strip()
+        result = {
+            # "Content": content,
+            "Summary": final_summary
+        }
+        print(f"Reduce map summary:\n{result}")
+        return final_summary
+
     else:
         print("No match found")
 
@@ -273,24 +303,56 @@ SUMMARY:
     refine_chain = refine_prompt | llm | StrOutputParser()
 
     def refinement_runner(docs: list[Document]) -> str:
-        summary = initial_chain.invoke({"text": docs[0].page_content})
-        summary = extract_summary_segment_for_initial_chain(summary)
+        summary_init = initial_chain.invoke({"text": docs[0].page_content})
+        summary = extract_summary_segment_for_initial_chain(summary_init)
         for doc in docs[1:]:
-            summary = refine_chain.invoke({
+            summary_ref = refine_chain.invoke({
                 "existing_summary": summary,
                 "text": doc.page_content
             })
-            summary = extract_summary_segment_for_refine_chain(summary)
+            summary = extract_summary_segment_for_refine_chain(summary_ref)
         return summary
 
     refine_sequence = RunnableLambda(refinement_runner)
     return refine_sequence.invoke(documents)
 
 
+def get_final_summary_map_reduce(
+    summary_docs: list[Document],
+    hf_pipeline_raw,
+    reduce_prompt_template: str,
+    temperature=0.3,
+    word_limit=300
+) -> str:
+    """
+    Final summarization using map_reduce logic:
+    - Assumes all chunk summaries are already generated (as summary_docs)
+    - Uses HuggingFace pipeline for reduce stage
+    """
+
+    # Use the same HF pipeline for reduce stage (already batched)
+    llm = HuggingFacePipeline(pipeline=hf_pipeline_raw)
+
+    # Combine summaries into one long string
+    combined_text = "\n\n".join([doc.page_content for doc in summary_docs])
+
+    # Optional: limit token count (you can truncate if needed)
+    # token_count = len(hf_pipeline_raw.tokenizer(combined_text)["input_ids"])
+    # print(f"🧮 Token count in reduce input: {token_count}")
+
+    # Apply reduce prompt template
+    reduce_prompt = PromptTemplate.from_template(reduce_prompt_template)
+
+    reduce_chain = reduce_prompt | llm | StrOutputParser()
+
+    # Run the final summarization
+    return reduce_chain.invoke({"text": combined_text, "word_limit": 300})
+
+
 # Two reduce prompts for generating alternative summaries
 reduce_prompts = [
     """You are an expert summarizer. Combine the following partial summaries
-into a concise summary. Focus on the most important points. Avoid repetition.
+into a concise summary of less than 400 words. Focus on the most important points. Avoid repetition.
 
 Existing summary:
 {existing_summary}
@@ -298,10 +360,10 @@ Existing summary:
 New information:
 {text}
 
-Final summary (max 400 words):
+Final summary:
 """,
     """You are an expert summarizer. Combine the following partial summaries
-into a coherent summary emphasizing insights, conclusions, and actionable points.
+into a coherent summary of less than 400 words, emphasizing insights, conclusions, and actionable points.
 Avoid repeating any details from chunks.
 
 Existing summary:
@@ -310,16 +372,27 @@ Existing summary:
 New information:
 {text}
 
-Final summary  (max 400 words):
+Final summary:
 """
 ]
 
+reduce_prompt_template = """
+You are an expert summarizer.
+
+Below are summaries of different parts of a document. Your job is to combine them into one **concise, high-quality summary**, no more than **{word_limit} words**.
+
+Summaries:
+{text}
+
+Final summary (max {word_limit} words):
+"""
 def process_pdf(folder, chunk_size=2000, chunk_overlap=150):
     docs = []
     summaries = []
     summary = []
     total_papers_examined = 0
 
+    final_summaries = []
     for file in os.listdir(folder):
         if file.endswith(".pdf"):
             pdf_path = f"{pdfs_folder}/{file}"
@@ -329,7 +402,7 @@ def process_pdf(folder, chunk_size=2000, chunk_overlap=150):
             # Get the total number of pages, skip large file
             reader = PdfReader(pdf_path)
             num_pages = len(reader.pages)
-            if (num_pages > 25):
+            if (num_pages > 28):
                 print(f"skipping this long PDF file, ({num_pages} pages)")
                 continue
 
@@ -341,11 +414,14 @@ def process_pdf(folder, chunk_size=2000, chunk_overlap=150):
             # Step 2: summarize each chunk
             # chunk_summaries = summarize_chunks(docs, summarizer, batch_size=4)
             prompt_template = "<|begin_of_text|><|start_header_id|>user<|end_header_id|>\nSummarize the following text:\n\n{input}\n<|start_header_id|>assistant<|end_header_id|>\n"
-            chunk_summaries = summarize_chunks(chunks, summarizer, batch_size=4, prompt_template=prompt_template)
+            chunk_summaries = summarize_chunks(chunks, summarizer, batch_size=32, prompt_template=prompt_template)
+            
+        #    with open("summaries.jsonl", "r", encoding="utf-8") as f:
+        #        chunk_summaries = list(map(json.loads, f))
 
             print(f"\nTotal chunks: {len(chunks)}")
             print(f"Total chunk summaries: {len(chunk_summaries)}")
-            
+
             # === Step 5: Combine chunk summaries into Documents ===
             summary_docs = [
                 Document(
@@ -362,11 +438,23 @@ def process_pdf(folder, chunk_size=2000, chunk_overlap=150):
             ]
 
             # Step 3: generate two alternative final summaries
-            final_summaries = []
-            for i, prompt_template in enumerate(reduce_prompts):
-                # vary temperature slightly for diversity
-                summary = get_final_summary(summary_docs, summarizer, prompt_template, temperature=0.1 + 0.5*i)
-                print(f"Generated summary version {i} (approx. {len(summary.split())} words)")
+            # final_summaries = []
+
+            # for i, prompt_template in enumerate(reduce_prompts):
+            #    # vary temperature slightly for diversity
+            #    summary_r = get_final_summary(summary_docs, summarizer, prompt_template, temperature=0.1 + 0.5*i)
+            #    print(f"Generated summary version {i}")
+
+            for i in range(2):
+                summary_r = get_final_summary_map_reduce(
+                    summary_docs=summary_docs,                 # from summarize_chunks_fast()
+                    hf_pipeline_raw=summarizer,                # text-generation pipeline
+                    reduce_prompt_template=reduce_prompt_template,
+                    temperature=0.1 + 0.5*i,
+                    word_limit=300
+                )
+
+                summary = extract_summary_segment_for_reduce_map(summary_r)
 
                 if i == 0:
                     # At the first round, remember the summary obtained
@@ -374,22 +462,22 @@ def process_pdf(folder, chunk_size=2000, chunk_overlap=150):
                 if i == 1:
                     # After two summaries are generated, save them to the list which is to be edited later for accept/rejct action
                     final_summaries.append({
-                        "file_#": total_papers_examined,
+                       # "file_#": total_papers_examined,
                         "file_name": file,
-                        "chosen": summary1,
-                        "reject": summary
+                        "chosen": summary1, # first round
+                        "reject": summary   # second round
                     })
                     print("Summaries saved for file: ", file)
 
-            with open("reward_data_summaries.jsonl", "w") as f:
-                for item in final_summaries:
-                    f.write(json.dumps(item) + "\n")
-
             # Test one paper
-            if total_papers_examined == 1:
+            if total_papers_examined == 10:
                 print(f"Processed {total_papers_examined} PDF files")
 
                 break                    
+
+    with open("reward_data_summaries.jsonl", "w") as f:
+        for item in final_summaries:
+            f.write(json.dumps(item) + "\n")
 
 """
             # === Step 6: Final summarization using LangChain (stuff/map_reduce) ===

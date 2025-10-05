@@ -1,0 +1,7 @@
+# For reward model training and evaluation
+datasets
+rouge_score
+bert_score
+numpy
+evaluate
+scipy
